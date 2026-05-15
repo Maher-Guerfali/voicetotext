@@ -1,0 +1,5 @@
+Flask==3.0.3
+openai==1.54.3
+pydub==0.25.1
+reportlab==4.2.5
+python-dotenv==1.0.1

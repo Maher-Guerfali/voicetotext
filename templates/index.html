@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Voice to Text</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root { --bg:#0f1115; --card:#171a21; --fg:#e7e9ee; --muted:#9aa3b2; --acc:#6ee7b7; --err:#f87171; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:16px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+    .wrap { max-width: 760px; margin: 40px auto; padding: 0 20px; }
+    h1 { margin: 0 0 6px; font-size: 28px; }
+    p.sub { color: var(--muted); margin-top: 0; }
+    .card { background: var(--card); border-radius: 14px; padding: 22px; margin-top: 18px; }
+    label { display:block; font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+    input[type=file], input[type=text], select {
+      width:100%; background:#0f1115; color:var(--fg); border:1px solid #2a2f3a;
+      border-radius:8px; padding:10px 12px; font-size:15px;
+    }
+    button {
+      background: var(--acc); color:#0f1115; border:0; padding:12px 18px;
+      border-radius: 8px; font-weight:600; font-size:15px; cursor:pointer; margin-top: 14px;
+    }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .row { display:flex; gap:12px; margin-top:12px; }
+    .row > * { flex:1; }
+    .status { margin-top:14px; color: var(--muted); }
+    .err { color: var(--err); }
+    pre { background:#0b0d12; padding:14px; border-radius:10px; max-height:380px; overflow:auto; white-space: pre-wrap; word-wrap: break-word; }
+    .actions a {
+      display:inline-block; margin-right:10px; margin-top:10px;
+      background:#2a2f3a; color:var(--fg); text-decoration:none;
+      padding:10px 14px; border-radius:8px; font-size:14px;
+    }
+    .actions a:hover { background:#3a4250; }
+    .spinner { display:inline-block; width:14px; height:14px; border:2px solid #2a2f3a; border-top-color:var(--acc); border-radius:50%; animation: spin 1s linear infinite; vertical-align:-2px; margin-right:8px;}
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Voice → Text</h1>
+    <p class="sub">Upload an audio file and get a full transcript. Powered by OpenAI Whisper.</p>
+
+    <form id="form" class="card">
+      <label for="audio">Audio file (mp3, m4a, wav, ogg, webm, flac, …)</label>
+      <input id="audio" name="audio" type="file" accept="audio/*" required>
+
+      <div class="row">
+        <div>
+          <label for="language">Language (optional, ISO-639-1)</label>
+          <input id="language" name="language" type="text" placeholder="e.g. en, fr, ar, es" maxlength="5">
+        </div>
+      </div>
+
+      <button id="go" type="submit">Transcribe</button>
+      <div id="status" class="status"></div>
+    </form>
+
+    <div id="result" class="card" style="display:none">
+      <div class="actions">
+        <a id="dlTxt" href="#" download>Download .txt</a>
+        <a id="dlPdf" href="#" download>Download .pdf</a>
+      </div>
+      <h3>Transcript</h3>
+      <pre id="text"></pre>
+    </div>
+  </div>
+
+<script>
+const form = document.getElementById('form');
+const statusEl = document.getElementById('status');
+const result = document.getElementById('result');
+const textEl = document.getElementById('text');
+const dlTxt = document.getElementById('dlTxt');
+const dlPdf = document.getElementById('dlPdf');
+const btn = document.getElementById('go');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  result.style.display = 'none';
+  statusEl.className = 'status';
+  statusEl.innerHTML = '<span class="spinner"></span>Uploading and transcribing… (long audio may take a minute)';
+  btn.disabled = true;
+
+  const fd = new FormData(form);
+  try {
+    const res = await fetch('/transcribe', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    textEl.textContent = data.text;
+    dlTxt.href = data.txt_url;
+    dlPdf.href = data.pdf_url;
+    result.style.display = 'block';
+    statusEl.textContent = 'Done.';
+  } catch (err) {
+    statusEl.className = 'status err';
+    statusEl.textContent = 'Error: ' + err.message;
+  } finally {
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
