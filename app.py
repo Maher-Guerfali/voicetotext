@@ -25,7 +25,7 @@ TRANSCRIPT_DIR.mkdir(exist_ok=True)
 WHISPER_LIMIT_BYTES = 24 * 1024 * 1024
 CHUNK_MS = 10 * 60 * 1000  # 10-minute chunks
 
-ALLOWED_EXT = {"mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm", "ogg", "flac", "aac"}
+ALLOWED_EXT = {"mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm", "ogg", "oga", "opus", "flac", "aac"}
 
 
 def client():
